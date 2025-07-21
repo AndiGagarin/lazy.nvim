@@ -84,18 +84,28 @@ function M:init(opts)
 end
 
 function M:layout()
-  local function size(max, value)
-    return value > 1 and math.min(value, max) or math.floor(max * value)
+  local function calc_size(size, viewport, cutoff)
+    return size > 1 and math.min(math.max(size - cutoff, 1), viewport) or math.floor(size * viewport)
   end
-  self.win_opts.width = size(vim.o.columns, self.opts.size.width)
-  self.win_opts.height = size(vim.o.lines, self.opts.size.height)
-  self.win_opts.row = math.floor((vim.o.lines - self.win_opts.height) / 2)
-  self.win_opts.col = math.floor((vim.o.columns - self.win_opts.width) / 2)
+  local linecut = vim.o.cmdheight + 1 -- Count unavailable lines. Extra 1 is for statusline.
+  local colcut = 0 -- count unavailable columns
 
-  if self.opts.border ~= "none" then
-    self.win_opts.row = self.win_opts.row - 1
-    self.win_opts.col = self.win_opts.col - 1
+  if self.opts.border ~= "none" and self.opts.border ~= "" then
+    linecut = linecut + 2 -- One for each side.
+    colcut = colcut + 2 -- One for each side.
   end
+
+  -- Maximum possible window size. Less than 1 makes no sense.
+  local lines = math.max(vim.o.lines - linecut, 1)
+  local columns = math.max(vim.o.columns - colcut, 1)
+
+  --  Clamp demanded configuration between 1 and maximum possible window size.
+  self.win_opts.height = calc_size(self.opts.size.height, lines, linecut)
+  self.win_opts.width = calc_size(self.opts.size.width, columns, colcut)
+
+  -- Center window.
+  self.win_opts.row = math.floor((lines - self.win_opts.height) / 2)
+  self.win_opts.col = math.floor((columns - self.win_opts.width) / 2)
 
   if self.opts.margin then
     if self.opts.margin.top then
