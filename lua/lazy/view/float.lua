@@ -53,7 +53,7 @@ function M:init(opts)
   self.opts = vim.tbl_deep_extend("force", {
     size = Config.options.ui.size,
     style = "minimal",
-    border = Config.options.ui.border or "none",
+    border = Config.options.ui.border or vim.o.winborder,
     backdrop = Config.options.ui.backdrop or 60,
     zindex = 50,
   }, opts or {})
@@ -65,7 +65,7 @@ function M:init(opts)
   ---@field col number
   self.win_opts = {
     relative = "editor",
-    style = self.opts.style ~= "" and self.opts.style or nil,
+    style = self.opts.style,
     border = self.opts.border,
     zindex = self.opts.zindex,
     noautocmd = self.opts.noautocmd,
